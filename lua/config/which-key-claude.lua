@@ -11,6 +11,7 @@ wk.add({
   { "<leader>am", desc = "Select model" },
   { "<leader>as", desc = "Send selection", mode = "v" },
   { "<leader>ae", desc = "Send diagnostics to Claude" },
+  { "<leader>al", desc = "Send logs/selection to Claude" },
   { "<leader>aa", desc = "Accept diff" },
   { "<leader>ad", desc = "Reject diff" },
 })
