@@ -1,0 +1,45 @@
+# Lazy.nvim plugin directory and lock file
+lazy-lock.json
+
+# Plugin installation cache
+.lazy/
+
+# Mason tool installations  
+mason/
+
+# DAP and debug data
+.dap/
+npm-dap.json
+
+# Neovim session files
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local configuration overrides
+local.lua
+secrets.lua
+
+# Spell files
+spell/
+
+# Backup files
+backup/
+swap/
+undo/
+
+# LSP logs
+lsp.log
+
+# Runtime data
+data/
+state/
+cache/
