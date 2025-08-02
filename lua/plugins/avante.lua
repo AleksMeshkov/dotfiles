@@ -7,7 +7,25 @@ return {
   },
   keys = {
     { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Claude Code" },
-    { "<leader>af", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude" },
+    { "<leader>af", function()
+        -- Focus existing Claude window
+        local claude_win = nil
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          local buf = vim.api.nvim_win_get_buf(win)
+          local buf_name = vim.api.nvim_buf_get_name(buf)
+          if buf_name:match("claude") then
+            claude_win = win
+            break
+          end
+        end
+        
+        if claude_win then
+          vim.api.nvim_set_current_win(claude_win)
+          vim.notify("Focused Claude window", vim.log.levels.INFO)
+        else
+          vim.notify("No Claude window found. Use <leader>ac to open.", vim.log.levels.WARN)
+        end
+      end, desc = "Focus Claude" },
     { "<leader>ar", function()
         -- Run actual claude --resume command in right panel
         require("snacks").terminal("claude --resume", { 
@@ -21,7 +39,59 @@ return {
         })
       end, desc = "Claude --continue" },
     { "<leader>am", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select model" },
-    { "<leader>as", "<cmd>ClaudeCodeSend<cr>", mode = "v", desc = "Send selection" },
+    { "<leader>as", function()
+        -- Send visual selection to Claude (reuse existing window)
+        local start_pos = vim.fn.getpos("'<")
+        local end_pos = vim.fn.getpos("'>")
+        local buf = vim.api.nvim_get_current_buf()
+        local lines = vim.api.nvim_buf_get_lines(buf, start_pos[2] - 1, end_pos[2], false)
+        
+        if #lines == 0 then
+          vim.notify("No selection found", vim.log.levels.WARN)
+          return
+        end
+        
+        -- Adjust first and last line for partial selection
+        if #lines == 1 then
+          lines[1] = string.sub(lines[1], start_pos[3], end_pos[3])
+        else
+          lines[1] = string.sub(lines[1], start_pos[3])
+          lines[#lines] = string.sub(lines[#lines], 1, end_pos[3])
+        end
+        
+        local filename = vim.fn.expand("%:p")
+        local selection_text = "File: " .. filename .. "\n\nSelected Code:\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        
+        -- Copy to clipboard 
+        vim.fn.setreg("+", selection_text)
+        vim.notify("Selection copied to clipboard. Opening Claude...", vim.log.levels.INFO)
+        
+        -- Focus existing Claude window or open new one
+        local claude_win = nil
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          local buf = vim.api.nvim_win_get_buf(win)
+          local buf_name = vim.api.nvim_buf_get_name(buf)
+          if buf_name:match("claude") then
+            claude_win = win
+            break
+          end
+        end
+        
+        if claude_win then
+          -- Focus existing Claude window and paste
+          vim.api.nvim_set_current_win(claude_win)
+          vim.cmd('normal! G') -- Go to end of buffer
+          vim.cmd('startinsert!') -- Enter insert mode at end of line
+          vim.schedule(function()
+            vim.api.nvim_paste(vim.fn.getreg("+"), true, -1)
+          end)
+        else
+          -- Open new Claude session
+          require("snacks").terminal("claude", { 
+            win = { position = "right", size = 0.4 }
+          })
+        end
+      end, mode = "v", desc = "Send selection" },
     { "<leader>ae", function()
         -- Send current buffer diagnostics to Claude
         local diagnostics = vim.diagnostic.get(0)
@@ -44,12 +114,35 @@ return {
           )
         end
         
-        -- Copy to clipboard and open Claude in right panel
+        -- Copy to clipboard and focus/open Claude
         vim.fn.setreg("+", diagnostic_text)
         vim.notify("Diagnostics copied to clipboard. Opening Claude...", vim.log.levels.INFO)
-        require("snacks").terminal("claude", { 
-          win = { position = "right", size = 0.4 }
-        })
+        
+        -- Focus existing Claude window or open new one
+        local claude_win = nil
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          local buf = vim.api.nvim_win_get_buf(win)
+          local buf_name = vim.api.nvim_buf_get_name(buf)
+          if buf_name:match("claude") then
+            claude_win = win
+            break
+          end
+        end
+        
+        if claude_win then
+          -- Focus existing Claude window and paste
+          vim.api.nvim_set_current_win(claude_win)
+          vim.cmd('normal! G') -- Go to end of buffer
+          vim.cmd('startinsert!') -- Enter insert mode at end of line
+          vim.schedule(function()
+            vim.api.nvim_paste(vim.fn.getreg("+"), true, -1)
+          end)
+        else
+          -- Open new Claude session
+          require("snacks").terminal("claude", { 
+            win = { position = "right", size = 0.4 }
+          })
+        end
       end, desc = "Send diagnostics to Claude" },
     { "<leader>al", function()
         -- Send terminal/log output to Claude
