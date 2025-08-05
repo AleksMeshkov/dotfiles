@@ -15,3 +15,7 @@ vim.keymap.set("n", "<leader><tab>o", function() Snacks.bufdelete.other() end, {
 vim.keymap.set("n", "<leader>fp", function()
   Snacks.picker.projects()
 end, { desc = "Find Projects" })
+
+-- Aerial symbols override (replaces LazyVim's trouble symbols)
+vim.keymap.set("n", "<leader>cs", "<cmd>AerialToggle<cr>", { desc = "Aerial (Symbols)" })
+vim.keymap.set("n", "<leader>cS", "<cmd>AerialNavToggle<cr>", { desc = "Aerial Navigation" })
