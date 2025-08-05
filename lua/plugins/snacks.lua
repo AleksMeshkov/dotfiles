@@ -15,5 +15,12 @@ return {
         },
       },
     },
+    project = {
+      enabled = true,
+      projects = {
+        "~/Devel/my.slateaudio.com",
+        "~/.config/nvim",
+      },
+    },
   },
 }
